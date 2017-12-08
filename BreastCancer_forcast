@@ -1,0 +1,130 @@
+#威斯康辛乳腺癌诊断数据（Breast Cancer Wisconsin (Diagnostic) Data Set），
+# 是加州大学机器学习和智能系统中心公布在其网站上众多数据集中的一个
+# 。作为提供给机器学习研究者做classification练习或者是classification算法研究的样本数据，
+# 该数据集包含569例乳腺肿瘤组织细胞的电子图像数据，每一图像有32个变量，1个变量是id编号，
+# 1个是人工标注的分类标签（良性or恶性），剩余30个变量都是描述电子图像的各种特征，
+# 也就是features，这些特征变量描述了细胞核的各种特点，比如半径，对称性，面积等，
+# 数据集无缺失值。 利用这30个特征变量构建机器学习模型可以对肿瘤细胞的性质进行预测。
+
+
+import numpy as np
+import pandas as pd
+import sklearn
+import matplotlib.pyplot as plt
+data=pd.read_csv("C:/Users/Administrator/Desktop/data.csv")
+# print(data.describe) ## 大致看看数据集的情况
+# print(data.shape) ## 看看有多少行和列
+# print(data.dtypes) ## 查看每一例的数据类型
+# print(data.columns) ## 查看每列的变量名
+diagnosis=data.diagnosis #m表示恶性 b为良性
+features=data.iloc[:,2:32] #位置索引【0，n-1】
+
+#利用五折交叉验证法，测试不同的分类算法在该数据集上的表现，
+# 本次我们只使用预测的准确率来作为评判标准
+
+from sklearn.cross_validation import StratifiedKFold
+### 加载logistic regression分类器
+from sklearn.linear_model import LogisticRegression
+### 加载SGD分类器，随机梯度下降分类器，可在网上搜索该算法原理
+from sklearn.linear_model import SGDClassifier
+### 加载支持向量机分类器
+from sklearn.svm import SVC
+
+### StratifiedKFold能够把数据集按照良恶性一定比例分成五份
+### 做五折交叉验证，四份作为训练集，一份作为测试集
+### 把三种分类算法在测试集上评估预测的准确率
+sfk=StratifiedKFold(y=diagnosis,n_folds=5,random_state=42,shuffle=True)
+for mm in sfk:
+    g,gg=mm  #数组分为两部分，分别赋值给g,gg
+    print(g)
+    print(gg)
+    print("*********")
+#print(len(sfk)) #5
+logClf=LogisticRegression(random_state=42)
+SGDclf=SGDClassifier()
+svmClf=SVC(random_state=42)
+i=0
+
+
+for a,b in sfk:
+    print(a)
+    print(b)
+    train_x,train_y=features.iloc[a,:],diagnosis[a]
+    test_x,test_y=features.iloc[b,:],diagnosis[b]
+    logClf.fit(X=train_x,y=train_y)
+    accuracy=logClf.score(X=test_x,y=test_y)
+    i+=1
+    print("accuracy socre for logistic regression on test set %d is %.5f" %(i,accuracy))
+
+z=0
+
+for a,b in sfk:
+    train_x,train_y=features.iloc[a,:],diagnosis[a]
+    test_x,test_y=features.iloc[b,:],diagnosis[b]
+    SGDclf.fit(X=train_x,y=train_y)
+    accuracy=SGDclf.score(X=test_x,y=test_y)
+    z+=1
+    print("accuracy socre for SGDclassifier on test set %d is %.5f" %(z,accuracy))
+
+m=0
+
+for a,b in sfk:
+    train_x,train_y=features.iloc[a,:],diagnosis[a]
+    test_x,test_y=features.iloc[b,:],diagnosis[b]
+    svmClf.fit(X=train_x,y=train_y)
+    accuracy=svmClf.score(X=test_x,y=test_y)
+    m+=1
+    print("accuracy socre for SVMclassifier on test set %d is %.5f" %(m,accuracy))
+
+
+#*********************************************
+
+#为实现代码的重复使用并更加concise，我们可以构建一个类，将上面的过程包装起来使用，
+# 扩展到四种分类器，在上面的基础上增加RandomForest （随机森林）分类器。
+
+class winsconBC:
+    def __init__(self,data_y,method,rand_seed=42,Nfold=3,shuffled=True):
+        from sklearn.cross_validation import StratifiedKFold
+        self.data=data_y
+        self.clf=method
+        self.Rseed=rand_seed
+        self.Nfolds = Nfolds
+        self.shuffle = shuffled
+        self.classifier = method
+        self.sfk=StratifiedKFold(y=self.data,n_folds=self.Nfolds,random_state=self.Rseed,shuffle=self.shuffle)
+
+    def classify(self):
+        accuracy = list()
+        for TR, TS in self.sfk:
+            train_x, train_y = features.iloc[TR, :], diagnosis[TR]
+            test_x, test_y = features.iloc[TS, :], diagnosis[TS]
+            if self.classifier == "logistic":
+                from sklearn.linear_model import LogisticRegression
+                logClf = LogisticRegression(random_state=42)
+                logClf.fit(train_x, train_y)
+                accuracy.append(logClf.score(X=test_x, y=test_y))
+
+            if self.classifier == "SGD":
+                from sklearn.linear_model import SGDClassifier
+                SGDclf = SGDClassifier(random_state=self.Rseed)
+                SGDclf.fit(X=train_x, y=train_y)
+                accuracy.append(SGDclf.score(X=test_x, y=test_y))
+
+            if self.classifier == "SVM":
+                from sklearn.svm import SVC
+                svmClf = SVC(random_state=self.Rseed)
+                svmClf.fit(X=train_x, y=train_y)
+                accuracy.append(svmClf.score(X=test_x, y=test_y))
+
+            if self.classifier == "randomforest":
+                from sklearn.ensemble import RandomForestClassifier
+                rmClf = RandomForestClassifier()
+                rmClf.fit(X=train_x, y=train_y)
+                accuracy.append(rmClf.score(X=test_x, y=test_y))
+        return (np.array(accuracy))
+
+plt.figure()
+plt.bar(np.arange(4),np.array([np.mean(winsconBC(data_y=diagnosis,method=i,Nfolds=5).classify()) for i in ["SGD",'logistic','SVM',"randomforest"]]))
+plt.xticks(np.arange(4), ("SGD",'logistic','SVM',"randomforest"))
+plt.axhline(0.95,c="r") ## 加一条accuracy=0.95的基准曲线做参考
+plt.show()
