@@ -100,7 +100,7 @@ class winsconBC:
             test_x, test_y = features.iloc[TS, :], diagnosis[TS]
             if self.classifier == "logistic":
                 from sklearn.linear_model import LogisticRegression
-                logClf = LogisticRegression(random_state=42)
+                logClf = LogisticRegression(random_state=42)  #参数不设置时为随机种子
                 logClf.fit(train_x, train_y)
                 accuracy.append(logClf.score(X=test_x, y=test_y))
 
