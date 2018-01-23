@@ -1,5 +1,26 @@
-#-*- coding:gbk -*-
-#批量处理编码格式转换
+#-*- coding:utf8 -*-
+#鎵归噺澶勭悊缂栫爜鏍煎紡杞崲锛堜紭鍖栵級
+#缂栫爜鍒ゅ埆
+import os
+import chardet
+
+path1 = 'E://2016txtutf/'
+def dirlist(path):
+    filelist =  os.listdir(path)
+    for filename in filelist:
+        filepath = os.path.join(path, filename)
+        if os.path.isdir(filepath):
+            dirlist(filepath)
+        else:
+            if filepath.endswith('.txt'):
+                f = open(filepath)
+                data = f.read()
+                if chardet.detect(data)['encoding'] != 'utf-8':
+                    print filepath + "----"+ chardet.detect(data)['encoding']
+
+dirlist(path1)
+
+#缂栫爜杞崲
 import codecs
 import os
 path1 = 'E://dir/'
