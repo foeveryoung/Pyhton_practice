@@ -27,7 +27,7 @@ df_Queens_2000=df_Queens[df['Date Local'].dt.year==2000]
 df_Queens_2000['NO2 Mean'].groupby(df_Queens_2000['Date Local'].dt.month).mean()
 
 #利用map函数对pandas的AQI列分等级
-df_Queens['AQI']=df_Queens[['NO2 AQI','O3 AQI','SO2 AQI','CO AQI']].apply(lambda x:max(x),axis=1)  #列，左右之间取最大
+df_Queens['AQI']=df_Queens[['NO2 AQI','O3 AQI','SO2 AQI','CO AQI']].apply(lambda x:max(x),axis=1)  #每一行，左右之间取最大
 def AQi_level(e):
     if e<=50:
         return 'Good'
