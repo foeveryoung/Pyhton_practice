@@ -37,3 +37,6 @@ f=func()
 f._next_()
 f.send('Python')  #send在返回值出传入值
 f.send('小明')
+
+
+#测试一下
